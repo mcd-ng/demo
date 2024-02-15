@@ -1,0 +1,121 @@
+<h1>Branch Freeze</h1>
+
+
+<p>Choose Branch to Freeze</p>
+
+<div class="row">
+    <div class="col-4">
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon1">release/</span>
+            </div>
+            <input type="text" class="form-control" [(ngModel)]="selectedBranch" placeholder="Branch name i.e. 2020-02" aria-label="Branch" aria-describedby="basic-addon1" #branchElem>
+            <div class="input-group-append">
+                <span class="input-group-text" (click)="refreshBranches()">
+                    <i [class]="branchListIsRefreshClass"></i>
+                </span>
+                <span class="input-group-text">
+                    <i [class]="branchClassValue"></i>
+                </span>
+
+            </div>
+            <small [class]="branchNotificationClsss" [innerHTML]="branchNotificationText"></small>
+        </div>
+    </div>
+</div>
+
+When you click <b class="text-primary">Create</b>
+<ul>
+    <li>Branch will be created <b>for each repository</b> for every tribe</li>
+    <li>The Branch will be created under <b>release/[tribe]/[release]_[tribe]</b> (i.e. release/2020-02/2020-02_WH)
+    </li>
+    <li>A <b>brach policy</b> will be created with the owner's approval</li>
+    <li><b>Build Definitons</b> will be created under <b>release/[release]/[tribe]/[tribe]_[release]</b></li>
+</ul>
+
+<a data-toggle="collapse" href="#repositoryList" role="button" aria-expanded="false" aria-controls="repositoryList">
+    Show Repositories
+</a>
+<div class="row" *ngIf="systemInfo">
+    <div class="col-10">
+        <div class="collapse" id="repositoryList">
+            <p>Repository file is located in {{systemInfo.jsonLocation}} </p>
+            <ul>
+                <li *ngFor="let repo of systemInfo.repositories">{{repo.name}}</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<a data-toggle="collapse" href="#customerList" role="button" aria-expanded="false" aria-controls="customerList">
+    Show Tribes
+</a>
+<div class="row" *ngIf="systemInfo">
+    <div class="col-10">
+        <div class="collapse" id="customerList">
+            <p>Tribes file is located in {{systemInfo.jsonLocation}} </p>
+            <ul>
+                <li *ngFor="let cust of systemInfo.customers">{{cust.name}} ({{cust.initial}})</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<a data-toggle="collapse" href="#preview" role="button" aria-expanded="false" aria-controls="preview">
+    Preview
+</a>
+<div class="row" *ngIf="systemInfo">
+    <div class="col-11">
+        <div class="collapse" id="preview">
+            <p>List the new branches that will be created</p>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Repository</th>
+                        <th scope="col">Tribe</th>
+                        <th scope="col">New Branch</th>
+                        <th scope="col">New Build(s)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <ng-template ngFor let-tribeSet [ngForOf]="systemInfo.tribeSettings" let-custIndex="index">
+                        <tr scope="row">
+                            <th scope="col">{{tribeSet.repo.name}}</th>
+                            <td scope="col">{{tribeSet.tribe.name}}</td>
+                            <td scope="col">release/{{tribeSet.tribe.initial}}/{{selectedBranch}}_{{tribeSet.tribe.initial}}</td>
+                            <td scope="col" *ngIf="tribeSet.repo.buildPrefix">release/{{selectedBranch}}/{{tribeSet.tribe.initial}}/{{tribeSet.tribe.initial}}_{{tribeSet.repo.buildPrefix}}_{{selectedBranch}}</td>
+                            <td scope="col" *ngIf="tribeSet.repo.buildFolder">release/{{selectedBranch}}/{{tribeSet.tribe.initial}}/{{tribeSet.repo.buildFolder}}/*</td>
+                        </tr>
+                    </ng-template>
+                    <!-- <ng-template ngFor let-repo [ngForOf]="systemInfo.repositories" let-repoIndex="index">
+                        <ng-template ngFor let-cust [ngForOf]="systemInfo.customers" let-custIndex="index">
+                            <tr>
+                                <th scope="row">{{repo.name}}</th>
+                                <td>{{cust.name}}</td>
+                                <td>release/{{cust.initial}}/{{selectedBranch}}_{{cust.initial}}</td>
+                                <td *ngIf="repo.buildPrefix">release/{{selectedBranch}}/{{cust.initial}}/{{cust.initial}}_{{repo.buildPrefix}}_{{selectedBranch}}</td>
+                                <td *ngIf="repo.buildFolder">release/{{selectedBranch}}/{{cust.initial}}/{{repo.buildFolder}}/*</td>
+                            </tr>
+                        </ng-template>
+                    </ng-template> -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<button type="button" [disabled]="inProgress || branchIssue" class="btn btn-primary" (click)="confirm()">Create</button>
+
+
+
+<p *ngIf="isCompleted">
+    <b class="text-success">Branch creatd!</b> Please go to <a [attr.href]="systemInfo.tfsUrl + systemInfo.teamProject + '/_git'">Azure DevOps</a> to view the new branches
+</p>
+
+<div class="row ">
+    <div class="col-4 ">
+        <div *ngIf="inProgress " class="alert alert-info mt-2 " role="alert ">
+            <i class="fa fa-spinner fa-spin "></i> Creating, please wait...
+        </div>
+    </div>
+</div>
